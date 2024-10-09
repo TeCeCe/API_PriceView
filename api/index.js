@@ -539,12 +539,12 @@ let products = [
     }
   ]
   
-  const express = require('express');
-  const multer = require('multer');
-  const cors = require('cors');
-  const { CloudinaryStorage } = require('multer-storage-cloudinary');
-  const cloudinary = require('cloudinary').v2;
-  const app = express();
+const express = require('express');
+const multer = require('multer');
+const cors = require('cors');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const cloudinary = require('cloudinary').v2;
+const app = express();
 
 // Configurar o Cloudinary
 cloudinary.config({
@@ -560,79 +560,80 @@ const cloudinaryStorage = new CloudinaryStorage({
     folder: 'products',
     format: async (req, file) => 'png', // ou 'jpeg'
     public_id: (req, file) => `${file.originalname}_${Date.now()}`,
+    transformation: [
+      {
+        width: 500,
+        height: 500,
+        crop: 'limit', // ou 'scale', 'fit', etc., dependendo do que você precisa
+        fetch_format: 'auto',
+        quality: 'auto',
+      },
+    ],
   },
 });
-  
-  // Habilita CORS para todas as rotas
-  app.use(cors());
-  
-  // Middleware para permitir requisições CORS com cabeçalhos e métodos específicos
-  app.use((req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*'); // Permite todas as origens
-      res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos permitidos
-      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-      next();
-  });
-  
-  // Permite interpretar JSON nas requisições
-  app.use(express.json());
-  
-  // Configuração do multer para upload de arquivos
-  const storage = multer.memoryStorage();
-  const upload = multer({ storage: storage });
-  
-  // Rota para adicionar um produto
+
+// Configurar o multer com o storage do Cloudinary
+const upload = multer({ storage: cloudinaryStorage });
+
+// Habilita CORS para todas as rotas
+app.use(cors());
+
+// Middleware para permitir requisições CORS com cabeçalhos e métodos específicos
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // Permite todas as origens
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Métodos permitidos
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+// Permite interpretar JSON nas requisições
+app.use(express.json());
+
+// Rota para adicionar um produto
 app.post('/api/products', upload.array('photos'), async (req, res) => {
   const { name, category, description, specs, companies_prices } = req.body;
-  
+
   try {
-      const parsedDescription = JSON.parse(description);
-      const parsedSpecs = JSON.parse(specs);
-      const parsedCompaniesPrices = JSON.parse(companies_prices);
+    const parsedDescription = JSON.parse(description);
+    const parsedSpecs = JSON.parse(specs);
+    const parsedCompaniesPrices = JSON.parse(companies_prices);
 
-      // Upload das imagens para o Cloudinary
-      const photos = await Promise.all(req.files.map(async (file) => {
-          const result = await cloudinary.uploader.upload(file.path, {
-              folder: 'products',
-              public_id: `${file.originalname}_${Date.now()}`,
-          });
-          return result.secure_url; // URL da imagem hospedada no Cloudinary
-      }));
+    // URLs das imagens já estão disponíveis no req.files após o upload
+    const photos = req.files.map(file => file.path); // O caminho da imagem já foi gerado pelo CloudinaryStorage
 
-      const product = {
-          id: products.length + 1,
-          name,
-          category,
-          description: parsedDescription,
-          specs: parsedSpecs,
-          companies_prices: parsedCompaniesPrices,
-          photos  // URLs das imagens do Cloudinary
-      };
+    const product = {
+      id: products.length + 1,
+      name,
+      category,
+      description: parsedDescription,
+      specs: parsedSpecs,
+      companies_prices: parsedCompaniesPrices,
+      photos, // URLs das imagens do Cloudinary
+    };
 
-      products.push(product);
-      res.json({ message: 'Produto adicionado com sucesso', product });
+    products.push(product);
+    res.json({ message: 'Produto adicionado com sucesso', product });
   } catch (error) {
-      res.status(400).json({ message: 'Erro ao adicionar produto. Verifique o formato dos dados.' });
+    res.status(400).json({ message: 'Erro ao adicionar produto. Verifique o formato dos dados.', error });
   }
 });
-  
-  // Rota para buscar todos os produtos
-  app.get('/api/products', (req, res) => {
-      res.json(products);
-  });
-  
-  // Rota para excluir um produto
-  app.delete('/api/products/:id', (req, res) => {
-      const productId = parseInt(req.params.id);
-      const productIndex = products.findIndex(product => product.id === productId);
-  
-      if (productIndex !== -1) {
-          products.splice(productIndex, 1);
-          res.json({ message: 'Produto excluído com sucesso' });
-      } else {
-          res.status(404).json({ message: 'Produto não encontrado' });
-      }
-  });
-  
-  module.exports = app;
-  
+
+// Rota para buscar todos os produtos
+app.get('/api/products', (req, res) => {
+  res.json(products);
+});
+
+// Rota para excluir um produto
+app.delete('/api/products/:id', (req, res) => {
+  const productId = parseInt(req.params.id);
+  const productIndex = products.findIndex(product => product.id === productId);
+
+  if (productIndex !== -1) {
+    products.splice(productIndex, 1);
+    res.json({ message: 'Produto excluído com sucesso' });
+  } else {
+    res.status(404).json({ message: 'Produto não encontrado' });
+  }
+});
+
+module.exports = app;
