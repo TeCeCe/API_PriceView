@@ -548,7 +548,7 @@ let products = [
   
   // Configurar o Cloudinary
   cloudinary.config({
-    cloud_name: 'Imgs',
+    cloud_name: 'dg2q8pzn8',
     api_key: '914126642355694',
     api_secret: 'yqOi9rEw5yUHqePZqxL-KPXkCQk'
   });
