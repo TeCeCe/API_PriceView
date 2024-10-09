@@ -331,10 +331,10 @@
 
           listaProdutos += `<p><strong>Imagens:</strong></p>`;
           if (Array.isArray(produto.photos)) {
-            produto.photos.forEach(photo => {
-              listaProdutos += `<img src="data:image/jpeg;base64,${photo}" alt="Imagem do Produto" style="max-width: 200px; margin-right: 10px;">`;
-            });
-          }
+          produto.photos.forEach(photo => {
+            listaProdutos += `<img src="${photo}" alt="Imagem do Produto" style="max-width: 200px; margin-right: 10px;">`;
+          });
+        }
 
           listaProdutos += '<hr>';
         });
