@@ -261,7 +261,7 @@
     formData.append('companies_prices', JSON.stringify(empresasPrecos));
 
     imagens.forEach(imagem => {
-      formData.append('photos', imagem);
+    formData.append('photos', imagem);  // As imagens serão tratadas pelo multer e enviadas ao Cloudinary
     });
 
     fetch('/api/products', {

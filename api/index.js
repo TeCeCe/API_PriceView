@@ -582,31 +582,39 @@ const cloudinaryStorage = new CloudinaryStorage({
   const upload = multer({ storage: storage });
   
   // Rota para adicionar um produto
-  app.post('/api/products', upload.array('photos'), (req, res) => {
-      const { name, category, description, specs, companies_prices } = req.body;
-      const photos = req.files ? req.files.map(file => file.buffer.toString('base64')) : [];
+app.post('/api/products', upload.array('photos'), async (req, res) => {
+  const { name, category, description, specs, companies_prices } = req.body;
   
-      try {
-          const parsedDescription = JSON.parse(description);
-          const parsedSpecs = JSON.parse(specs);
-          const parsedCompaniesPrices = JSON.parse(companies_prices);
-  
-          const product = {
-              id: products.length + 1,
-              name,
-              category,
-              description: parsedDescription,
-              specs: parsedSpecs,
-              companies_prices: parsedCompaniesPrices,
-              photos
-          };
-  
-          products.push(product);
-          res.json({ message: 'Produto adicionado com sucesso', product });
-      } catch (error) {
-          res.status(400).json({ message: 'Erro ao adicionar produto. Verifique o formato dos dados.' });
-      }
-  });
+  try {
+      const parsedDescription = JSON.parse(description);
+      const parsedSpecs = JSON.parse(specs);
+      const parsedCompaniesPrices = JSON.parse(companies_prices);
+
+      // Upload das imagens para o Cloudinary
+      const photos = await Promise.all(req.files.map(async (file) => {
+          const result = await cloudinary.uploader.upload(file.path, {
+              folder: 'products',
+              public_id: `${file.originalname}_${Date.now()}`,
+          });
+          return result.secure_url; // URL da imagem hospedada no Cloudinary
+      }));
+
+      const product = {
+          id: products.length + 1,
+          name,
+          category,
+          description: parsedDescription,
+          specs: parsedSpecs,
+          companies_prices: parsedCompaniesPrices,
+          photos  // URLs das imagens do Cloudinary
+      };
+
+      products.push(product);
+      res.json({ message: 'Produto adicionado com sucesso', product });
+  } catch (error) {
+      res.status(400).json({ message: 'Erro ao adicionar produto. Verifique o formato dos dados.' });
+  }
+});
   
   // Rota para buscar todos os produtos
   app.get('/api/products', (req, res) => {
