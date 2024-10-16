@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Produtos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      padding: 20px 0;
+      margin: 0;
+    }
+
+    .container {
+      width: 80%;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+    }
+
+    p {
+      font-weight: bold;
+      margin: 10px 0 5px;
+    }
+
+    input[type="text"], 
+    input[type="date"], 
+    select {
+      width: 40%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .field-container {
+      margin-bottom: 20px;
+    }
+
+    .topico, 
+    .subtopico {
+      width: calc(50% - 10px);
+      padding: 10px;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .product-list {
+      margin-top: 20px;
+    }
+
+    .product-list h3 {
+      border-bottom: 2px solid #007bff;
+      padding-bottom: 10px;
+    }
+
+    .product-list img {
+      max-width: 100px;
+      border-radius: 4px;
+    }
+
+    .product-list ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .product-list li {
+      padding: 5px 0;
+    }
+  </style>
+
+<script>
+  function adicionarCampo(campoId) {
+    const container = document.getElementById(campoId);
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <input type="text" class="topico" placeholder="Tópico">
+      <input type="text" class="subtopico" placeholder="Subtópico">
+      <button type="button" onclick="removerCampo(this)">Remover</button><br><br>
+    `;
+    container.appendChild(div);
+  }
+
+  function adicionarCampoImagem() {
+    const container = document.getElementById('imagensCampos');
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <input type="file" class="imagemp" accept="image/*">
+      <button type="button" onclick="removerCampo(this)">Remover</button><br><br>
+    `;
+    container.appendChild(div);
+  }
+
+  function adicionarEmpresa() {
+    const container = document.getElementById('empresasPrecosCampos');
+    const empresaDiv = document.createElement('div');
+    empresaDiv.classList.add('empresa-group');
+
+    empresaDiv.innerHTML = `
+      <div>
+        <label>Empresa:</label>
+        <select class="empresa">
+          <option value="AliExpress">AliExpress</option>
+          <option value="Amazon">Amazon</option>
+          <option value="Americanas">Americanas</option>
+          <option value="Casas Bahia">Casas Bahia</option>
+          <option value="Dell">Dell</option>
+          <option value="KaBum">KaBum</option>
+          <option value="Kalunga">Kalunga</option>
+          <option value="Magalu">Magalu</option>
+          <option value="Mercado Livre">Mercado Livre</option>
+          <option value="Nvidia">Nvidia</option>
+          <option value="Pichau">Pichau</option>
+          <option value="Ponto Frio">Ponto Frio</option>
+          <option value="Razer">Razer</option>
+          <option value="Redragon">Redragon</option>
+          <option value="Terabyte">Terabyte</option>
+        </select>
+      </div>
+      <div>
+        <label>Link:</label>
+        <input type="text" class="link" placeholder="Link da Empresa">
+      </div>
+      <div class="precos-datas-container">
+        <label>Preços e Datas:</label>
+        <div class="preco-data-group">
+          <input type="text" class="preco" placeholder="Preço">
+          <input type="date" class="dataPreco">
+          <button type="button" onclick="removerCampo(this)">Remover</button>
+        </div>
+      </div>
+      <button type="button" onclick="adicionarCampoPreco(this)">Adicionar Preço</button><br>
+      <button type="button" onclick="removerEmpresa(this)">Remover Empresa</button><br><br>
+    `;
+
+    container.appendChild(empresaDiv);
+  }
+
+  function adicionarCampoPreco(button) {
+    const precosDatasContainer = button.parentElement.querySelector('.precos-datas-container');
+    const novoCampo = document.createElement('div');
+    novoCampo.classList.add('preco-data-group');
+
+    novoCampo.innerHTML = `
+      <input type="text" class="preco" placeholder="Preço">
+      <input type="date" class="dataPreco">
+      <button type="button" onclick="removerCampo(this)">Remover</button>
+    `;
+
+    precosDatasContainer.appendChild(novoCampo);
+  }
+
+  function removerCampo(botao) {
+    botao.parentElement.remove();
+  }
+
+  function removerEmpresa(button) {
+    const empresaGroup = button.closest('.empresa-group'); // Encontra o grupo inteiro de empresa
+    empresaGroup.remove(); // Remove o grupo da empresa
+  }
+
+  function coletarCampos(campoId) {
+    const container = document.getElementById(campoId);
+    const inputs = container.querySelectorAll('div');
+    const resultado = {};
+
+    inputs.forEach(div => {
+      const topico = div.querySelector('.topico') ? div.querySelector('.topico').value : null;
+      const subtopico = div.querySelector('.subtopico') ? div.querySelector('.subtopico').value : null;
+      if (topico && subtopico) {
+        if (!resultado[topico]) {
+          resultado[topico] = [];
+        }
+        resultado[topico].push(subtopico);
+      }
+    });
+
+    return resultado;
+  }
+
+  function coletarImagens() {
+    const container = document.getElementById('imagensCampos');
+    const inputs = container.querySelectorAll('.imagemp');
+    const imagens = Array.from(inputs).map(input => input.files[0]).filter(file => file);
+    return imagens;
+  }
+
+  function coletarEmpresasPrecos() {
+    const container = document.getElementById('empresasPrecosCampos');
+    const empresas = container.querySelectorAll('.empresa-group');
+    const companies_prices = [];
+
+    empresas.forEach(div => {
+      const empresa = div.querySelector('.empresa').value;
+      const link = div.querySelector('.link').value;
+      const precosDatas = [];
+
+      const precosDatasGrupos = div.querySelectorAll('.preco-data-group');
+      precosDatasGrupos.forEach(grupo => {
+        const preco = grupo.querySelector('.preco').value;
+        const data = grupo.querySelector('.dataPreco').value;
+
+        if (preco && data) {
+          precosDatas.push({ preco, data });
+        }
+      });
+
+      if (empresa && link && precosDatas.length > 0) {
+        companies_prices.push({ empresa, link, precosDatas });
+      }
+    });
+
+    return companies_prices;
+  }
+
+  function enviarProduto() {
+    const nomep = document.getElementById("nomep").value;
+    const categoria = document.getElementById("categoria").value;
+    const descricao = coletarCampos('descricaoCampos');
+    const especificacoes = coletarCampos('especificacoesCampos');
+    const empresasPrecos = coletarEmpresasPrecos();
+    const imagens = coletarImagens();
+
+    const formData = new FormData();
+    formData.append('name', nomep);
+    formData.append('description', JSON.stringify(descricao));
+    formData.append('specs', JSON.stringify(especificacoes));
+    formData.append('category', categoria);
+    formData.append('companies_prices', JSON.stringify(empresasPrecos));
+
+    imagens.forEach(imagem => {
+    formData.append('photos', imagem);  // As imagens serão tratadas pelo multer e enviadas ao Cloudinary
+    });
+
+    fetch('/api/products', {
+      method: 'POST',
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        alert(data.message);
+      }
+      carregarProdutos();  // Atualiza a lista de produtos após o envio
+    })
+    .catch(error => {
+      console.error('Erro ao enviar o produto:', error);
+      alert('Erro ao cadastrar o produto.');
+    });
+  }
+
+  function carregarProdutos() {
+    fetch('/api/products')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(produtos => {
+        let listaProdutos = '';
+
+        produtos.forEach(produto => {
+          listaProdutos += `<h3>Produto: ${produto.name}</h3>`;
+          listaProdutos += `<p>Categoria: ${produto.category}</p>`;
+          listaProdutos += `<p>Empresas e Preços:</p>`;
+          
+          if (Array.isArray(produto.companies_prices)) {
+            listaProdutos += '<ul>';
+            produto.companies_prices.forEach(item => {
+              listaProdutos += `<li>Empresa: ${item.empresa}, Link: <a href="${item.link}" target="_blank">${item.link}</a>, Preços:</li>`;
+              item.precosDatas.forEach(precoData => {
+                listaProdutos += `<ul><li>Preço: ${precoData.preco}, Data: ${precoData.data}</li></ul>`;
+              });
+            });
+            listaProdutos += '</ul>';
+          } else {
+            listaProdutos += '<p>Nenhuma empresa ou preço cadastrado.</p>';
+          }
+
+          listaProdutos += `<p><strong>Descrição:</strong></p><ul>`;
+          if (produto.description) {
+            for (let [topico, subtropicos] of Object.entries(produto.description)) {
+              listaProdutos += `<li><strong>${topico}:</strong><ul>`;
+              subtropicos.forEach(subtopico => {
+                listaProdutos += `<li>${subtopico}</li>`;
+              });
+              listaProdutos += `</ul></li>`;
+            }
+          }
+          listaProdutos += `</ul>`;
+
+          listaProdutos += `<p><strong>Informações Técnicas:</strong></p><ul>`;
+          if (produto.specs) {
+            for (let [topico, subtropicos] of Object.entries(produto.specs)) {
+              listaProdutos += `<li><strong>${topico}:</strong><ul>`;
+              subtropicos.forEach(subtopico => {
+                listaProdutos += `<li>${subtopico}</li>`;
+              });
+              listaProdutos += `</ul></li>`;
+            }
+          }
+          listaProdutos += `</ul>`;
+
+          listaProdutos += `<p><strong>Imagens:</strong></p>`;
+          if (Array.isArray(produto.photos)) {
+          produto.photos.forEach(photo => {
+            listaProdutos += `<img src="${photo}" alt="Imagem do Produto" style="max-width: 200px; margin-right: 10px;">`;
+          });
+        }
+
+          listaProdutos += '<hr>';
+        });
+
+        document.getElementById('produtosCadastrados').innerHTML = listaProdutos;
+      })
+      .catch(error => {
+        console.error('Erro ao carregar produtos:', error);
+        alert('Erro ao carregar os produtos.');
+    });
+  }
+
+  window.onload = carregarProdutos;  // Carrega produtos ao iniciar a página
+</script>
+
+</head>
+<body>
+<h1>Cadastro de Produtos</h1>
+<div class="container">
+  <p>Nome do Produto:</p>
+  <input type="text" id="nomep">
+
+  <p>Categoria:</p>
+  <select id="categoria">
+    <option value="Componentes">Componentes</option>
+    <option value="Consoles">Consoles</option>
+    <option value="Periféricos">Periféricos</option>
+    <option value="Outros">Outros</option>
+  </select>
+
+  <p>Descrição:</p>
+  <div id="descricaoCampos"></div>
+  <button type="button" onclick="adicionarCampo('descricaoCampos')">Adicionar Descrição</button>
+
+  <p>Informações Técnicas:</p>
+  <div id="especificacoesCampos"></div>
+  <button type="button" onclick="adicionarCampo('especificacoesCampos')">Adicionar Informações Técnicas</button>
+
+  <p>Imagens:</p>
+  <div id="imagensCampos"></div>
+  <button type="button" onclick="adicionarCampoImagem()">Adicionar Imagem</button><br>
+
+  <p>Empresas e Preços:</p>
+  <div id="empresasPrecosCampos"></div>
+  <button type="button" onclick="adicionarEmpresa()">Adicionar Empresa</button>
+
+  <br><br>
+  <button type="button" onclick="enviarProduto()">Enviar Produto</button>
+
+  <h1>Produtos Cadastrados</h1>
+  <div id="produtosCadastrados" class="product-list"></div>
+</div>
+</body>
+</html>
